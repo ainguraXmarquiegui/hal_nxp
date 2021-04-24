@@ -11,6 +11,8 @@
 #include "fsl_cache.h"
 #endif /* FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL */
 
+uint32_t ATVRval, ATVRaddr, ATCRval, ATCRaddr;
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -2830,12 +2832,25 @@ void ENET_Ptp1588GetTimerNoIrqDisable(ENET_Type *base, enet_handle_t *handle, en
        It's the requirement when the 1588 clock source is slower
        than the register clock.
     */
+#if 1
     while (0U != (count--))
     {
         __NOP();
     }
+#else
+    if (base->ATCR & ENET_ATCR_EN_MASK) {
+        while (base->ATCR & ENET_ATCR_CAPTURE_MASK)
+        {
+            __NOP();
+        }
+    }
+#endif
+    ATCRval = base->ATCR;
+    ATCRaddr = &(base->ATCR);
     /* Get the captured time. */
     ptpTime->nanosecond = base->ATVR;
+    ATVRval = base->ATVR;
+    ATVRaddr = &(base->ATVR);
 }
 
 /*!
