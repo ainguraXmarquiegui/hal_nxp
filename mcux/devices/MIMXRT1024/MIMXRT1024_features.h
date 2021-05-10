@@ -279,6 +279,9 @@
 #define FSL_FEATURE_ENET_HAS_TIMER_PWCONTROL (1)
 /* @brief Has Extend MDIO Support. */
 #define FSL_FEATURE_ENET_HAS_EXTEND_MDIO (1)
+/* @brief Has precision time protocol (IEEE 1588) support (register bit field ECR[EN1588], registers ATCR, ATVR, ATOFF, ATPER, ATCOR, ATINC, ATSTMP). */
+#define FSL_FEATURE_ENET_SUPPORT_PTP (1)
+asdfasdf
 /* @brief Has Additional 1588 Timer Channel Interrupt. */
 #define FSL_FEATURE_ENET_HAS_ADD_1588_TIMER_CHN_INT (0)
 /* @brief Support Interrupt Coalesce for each instance */
