@@ -77,6 +77,8 @@ static enet_isr_t s_enetErrIsr[ARRAY_SIZE(s_enetBases)];
 static enet_isr_t s_enetTsIsr[ARRAY_SIZE(s_enetBases)];
 static enet_isr_t s_enet1588TimerIsr[ARRAY_SIZE(s_enetBases)];
 
+static void ENET_ReclaimTxDescriptor(ENET_Type *base, enet_handle_t *handle, uint8_t ringId);
+
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
@@ -350,7 +352,6 @@ void ENET_Down(ENET_Type *base)
 
     /* Disable interrupt. */
     base->EIMR = 0;
-
     /* Disable ENET. */
     base->ECR &= ~ENET_ECR_ETHEREN_MASK;
 
@@ -1863,6 +1864,9 @@ status_t ENET_SendFrame(ENET_Type *base,
         else if ((handle->txReclaimEnable[ringId]) && !ENET_TxDirtyRingAvailable(txDirtyRing))
         {
             result = kStatus_ENET_TxFrameBusy;
+#if 1
+            ENET_ReclaimTxDescriptor(base, handle, ringId);
+#endif
         }
         else
         {
@@ -3227,14 +3231,16 @@ void ENET_Ptp1588Configure(ENET_Type *base, enet_handle_t *handle, enet_ptp_conf
  */
 void ENET_Ptp1588StartTimer(ENET_Type *base, uint32_t ptpClkSrc)
 {
-    /* Restart PTP 1588 timer, master clock. */
-    base->ATCR = ENET_ATCR_RESTART_MASK;
-
     /* Initializes PTP 1588 timer. */
     base->ATINC = ENET_ATINC_INC(ENET_NANOSECOND_ONE_SECOND / ptpClkSrc);
     base->ATPER = ENET_NANOSECOND_ONE_SECOND;
     /* Sets periodical event and the event signal output assertion and Actives PTP 1588 timer.  */
     base->ATCR = ENET_ATCR_PEREN_MASK | ENET_ATCR_PINPER_MASK | ENET_ATCR_EN_MASK;
+    /* Restart PTP 1588 timer, master clock. */
+    base->ATCR |= ENET_ATCR_RESTART_MASK;
+    while ((base->ATCR & ENET_ATCR_RESTART_MASK) == ENET_ATCR_RESTART_MASK) {
+	;
+    }
 }
 
 /*!
@@ -3251,14 +3257,12 @@ void ENET_Ptp1588GetTimerNoIrqDisable(ENET_Type *base, enet_handle_t *handle, en
     ptpTime->second = handle->msTimerSecond;
     /* Get the nanosecond from the master timer. */
     base->ATCR |= ENET_ATCR_CAPTURE_MASK;
-
-#if defined(FSL_FEATURE_ENET_TIMESTAMP_CAPTURE_BIT_INVALID) && FSL_FEATURE_ENET_TIMESTAMP_CAPTURE_BIT_INVALID
-    /* The whole while loop includes at least three instructions(subs, nop and bne). */
-    uint32_t count = (handle->tsDelayCount + 3U - 1U) / 3U;
-
-    while (0U != (count--))
-    {
-        __NOP();
+    /* Add at least six clock cycle delay to get accurate time.
+       It's the requirement when the 1588 clock source is slower
+       than the register clock.
+    */
+    while ((base->ATCR & ENET_ATCR_CAPTURE_MASK) == ENET_ATCR_CAPTURE_MASK) {
+	;
     }
 #else
     /* Wait for capture over */
