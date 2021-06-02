@@ -87,6 +87,8 @@ static enet_isr_t s_enetTsIsr[ARRAY_SIZE(s_enetBases)];
 static enet_isr_t s_enet1588TimerIsr[ARRAY_SIZE(s_enetBases)];
 #endif
 
+static void ENET_ReclaimTxDescriptor(ENET_Type *base, enet_handle_t *handle, uint8_t ringId);
+
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
@@ -1717,6 +1719,7 @@ status_t ENET_SendFrame(ENET_Type *base,
     }
     else
     {
+        printk("send frame\n");
         /* Check if the transmit buffer is ready. */
         curBuffDescrip = txBdRing->txBdBase + txBdRing->txGenIdx;
         if (0U != (curBuffDescrip->control & ENET_BUFFDESCRIPTOR_TX_READY_MASK))
@@ -1726,7 +1729,14 @@ status_t ENET_SendFrame(ENET_Type *base,
         /* Check txDirtyRing if need frameinfo in tx interrupt callback. */
         else if ((handle->TxReclaimEnable[ringId]) && !ENET_TxDirtyRingAvailable(txDirtyRing))
         {
+            printk("\r\nringID = %d\n", ringId);
+            printk("\r\ndebug type 1\n");
+            printk("\r\nENET_TxDirtyRingAvailable(txDirtyRing) = %d\n", ENET_TxDirtyRingAvailable(txDirtyRing));
+            printk("\r\nbase->EIR = 0x%x\n", base->EIR);
+            printk("\r\nbase->EIMR = 0x%x\n", base->EIMR);
+            printk("\r\nbase->base->ECR = 0x%x\n", base->ECR);
             result = kStatus_ENET_TxFrameBusy;
+            ENET_ReclaimTxDescriptor(base, handle, ringId);
         }
         else
         {
@@ -2830,9 +2840,8 @@ void ENET_Ptp1588GetTimerNoIrqDisable(ENET_Type *base, enet_handle_t *handle, en
        It's the requirement when the 1588 clock source is slower
        than the register clock.
     */
-    while (0U != (count--))
-    {
-        __NOP();
+    while ((base->ATCR & ENET_ATCR_CAPTURE_MASK) == ENET_ATCR_CAPTURE_MASK) {
+	    ;
     }
     /* Get the captured time. */
     ptpTime->nanosecond = base->ATVR;
