@@ -2792,6 +2792,11 @@ void ENET_Ptp1588Configure(ENET_Type *base, enet_handle_t *handle, enet_ptp_conf
     ENET_Ptp1588StartTimer(base, ptpConfig->ptp1588ClockSrc_Hz);
 
     ENET_Ptp1588ConfigureHandler(base, handle, ptpConfig);
+
+    ENET_Ptp1588SetChannelMode(base, ptpConfig->channel,
+                        kENET_PtpChannelPulseHighonCompare, true);
+
+    ENET_Ptp1588SetChannelCmpValue(base, ptpConfig->channel, 0);
 }
 
 /*!
@@ -2830,8 +2835,6 @@ void ENET_Ptp1588StartTimer(ENET_Type *base, uint32_t ptpClkSrc)
  */
 void ENET_Ptp1588GetTimerNoIrqDisable(ENET_Type *base, enet_handle_t *handle, enet_ptp_time_t *ptpTime)
 {
-    uint16_t count = ENET_1588TIME_DELAY_COUNT;
-
     /* Get the current PTP time. */
     ptpTime->second = handle->msTimerSecond;
     /* Get the nanosecond from the master timer. */
