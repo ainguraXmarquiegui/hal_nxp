@@ -663,6 +663,8 @@ struct _enet_handle
     volatile enet_tx_bd_struct_t
         *txBdDirtyStatic[FSL_FEATURE_ENET_QUEUE]; /*!< The dirty transmit buffer descriptor for error static update. */
     uint64_t msTimerSecond;                       /*!< The second for Master PTP timer .*/
+    enet_ptp_timer_channel_t mPtpTmrChannel; /*!< PTP 1588 timer channel. */
+    uint32_t ptpNextCounter; /*!< PTP 1588 next output compare counter value */
 #endif                                            /* ENET_ENHANCEDBUFFERDESCRIPTOR_MODE */
 };
 

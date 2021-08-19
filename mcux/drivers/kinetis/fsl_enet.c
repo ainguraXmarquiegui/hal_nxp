@@ -2753,6 +2753,8 @@ void ENET_Ptp1588ConfigureHandler(ENET_Type *base, enet_handle_t *handle, enet_p
     /* Setting the receive and transmit state for transaction. */
     handle->msTimerSecond = 0;
 
+    handle->mPtpTmrChannel = ptpConfig->channel;
+
     /* Enables the time stamp interrupt and transmit frame interrupt to
      * handle the time-stamp . */
     ENET_EnableInterrupts(base, (ENET_TS_INTERRUPT | ENET_TX_INTERRUPT));
@@ -2761,6 +2763,38 @@ void ENET_Ptp1588ConfigureHandler(ENET_Type *base, enet_handle_t *handle, enet_p
     /* Set the IRQ handler when the interrupt is enabled. */
     ENET_SetTsISRHandler(base, ENET_TimeStampIRQHandler);
     ENET_SetTxISRHandler(base, ENET_TransmitIRQHandler);
+}
+
+static void ENET_Ptp1588enablepps(ENET_Type *base, enet_handle_t *handle, enet_ptp_timer_channel_t tmr_ch)
+{
+    uint32_t next_counter = 0;
+    uint32_t tmp_val = 0;
+    /* clear capture or output compare interrupt status if have. */
+    ENET_Ptp1588ClearChannelStatus(base, tmr_ch);
+
+    /* It is recommended to double check the TMODE field in the
+    * TCSR register to be cleared before the first compare counter
+    * is written into TCCR register. Just add a double check. */
+    tmp_val = base->CHANNEL[tmr_ch].TCSR;
+    do {
+        tmp_val &= ~(ENET_TCSR_TMODE_MASK);
+        base->CHANNEL[tmr_ch].TCSR = tmp_val;
+        tmp_val = base->CHANNEL[tmr_ch].TCSR;
+    } while (tmp_val & ENET_TCSR_TMODE_MASK);
+    tmp_val = (ENET_NANOSECOND_ONE_SECOND >> 1);
+    ENET_Ptp1588SetChannelCmpValue(base, tmr_ch, tmp_val);
+    /* Calculate the second the compare event timestamp */
+    next_counter = tmp_val;
+    /* Compare channel setting. */
+    ENET_Ptp1588ClearChannelStatus(base, tmr_ch);
+
+    ENET_Ptp1588SetChannelOutputPulseWidth(base, tmr_ch, false, 4, true);
+
+    /* Write the second compare event timestamp and calculate
+    * the third timestamp. Refer the TCCR register detail in the spec.*/
+    ENET_Ptp1588SetChannelCmpValue(base, tmr_ch, next_counter);
+    /* Update next counter */
+    handle->ptpNextCounter = next_counter;
 }
 
 /*!
@@ -2788,6 +2822,8 @@ void ENET_Ptp1588Configure(ENET_Type *base, enet_handle_t *handle, enet_ptp_conf
     ENET_Ptp1588StartTimer(base, ptpConfig->ptp1588ClockSrc_Hz);
 
     ENET_Ptp1588ConfigureHandler(base, handle, ptpConfig);
+
+    ENET_Ptp1588enablepps(base, handle, ptpConfig->channel);
 }
 
 /*!
@@ -2800,8 +2836,6 @@ void ENET_Ptp1588Configure(ENET_Type *base, enet_handle_t *handle, enet_ptp_conf
  */
 void ENET_Ptp1588StartTimer(ENET_Type *base, uint32_t ptpClkSrc)
 {
-    printk(" base->ATCR = %x\n",  base->ATCR);
-
     /* Initializes PTP 1588 timer. */
     base->ATINC = ENET_ATINC_INC(ENET_NANOSECOND_ONE_SECOND / ptpClkSrc);
     base->ATPER = ENET_NANOSECOND_ONE_SECOND;
@@ -2809,14 +2843,9 @@ void ENET_Ptp1588StartTimer(ENET_Type *base, uint32_t ptpClkSrc)
     base->ATCR = ENET_ATCR_PEREN_MASK | ENET_ATCR_PINPER_MASK | ENET_ATCR_EN_MASK;
     /* Restart PTP 1588 timer, master clock. */
     base->ATCR |= ENET_ATCR_RESTART_MASK;
-    printk(" base->ATCR = %x\n",  base->ATCR);
-    printk("base->ATPER = %x\n", base->ATPER);
-    printk("base->ATINC = %x\n", base->ATINC);
     while ((base->ATCR & ENET_ATCR_RESTART_MASK) == ENET_ATCR_RESTART_MASK) {
 	;
     }
-    printk(" base->ATCR = %x\n",  base->ATCR);
-    printk("Start Timer\n");
 }
 
 /*!
@@ -2845,8 +2874,6 @@ void ENET_Ptp1588GetTimerNoIrqDisable(ENET_Type *base, enet_handle_t *handle, en
     }
     /* Get the captured time. */
     ptpTime->nanosecond = base->ATVR;
-    //printk("base->ATCR = %x\n",  base->ATCR);
-    //printk("base->ATVR = %x\n",  base->ATVR);
 }
 
 /*!
@@ -3175,6 +3202,15 @@ void ENET_TimeStampIRQHandler(ENET_Type *base, enet_handle_t *handle)
 #endif /* FSL_FEATURE_ENET_QUEUE > 1 */
         }
     }
+
+    if (base->CHANNEL[handle->mPtpTmrChannel].TCSR & ENET_TCSR_TF_MASK)
+    {
+        ENET_Ptp1588SetChannelCmpValue(base, handle->mPtpTmrChannel, handle->ptpNextCounter);
+        do {
+            ENET_Ptp1588ClearChannelStatus(base, handle->mPtpTmrChannel);
+        } while (true == ENET_Ptp1588GetChannelStatus(base, handle->mPtpTmrChannel));
+    }
+
     SDK_ISR_EXIT_BARRIER;
 }
 #endif /* ENET_ENHANCEDBUFFERDESCRIPTOR_MODE */
