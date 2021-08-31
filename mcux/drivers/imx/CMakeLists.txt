@@ -9,6 +9,7 @@ zephyr_include_directories(.)
 zephyr_compile_definitions_ifdef(
   CONFIG_PTP_CLOCK_MCUX
   ENET_ENHANCEDBUFFERDESCRIPTOR_MODE
+  FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL
 )
 
 zephyr_library_compile_definitions_ifdef(
