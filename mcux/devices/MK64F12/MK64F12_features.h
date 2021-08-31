@@ -391,7 +391,7 @@
 /* @brief Has AVB Support. */
 #define FSL_FEATURE_ENET_HAS_AVB (0)
 /* @brief Has Timer Pulse Width control. */
-#define FSL_FEATURE_ENET_HAS_TIMER_PWCONTROL (0)
+#define FSL_FEATURE_ENET_HAS_TIMER_PWCONTROL (1)
 /* @brief Has Extend MDIO Support. */
 #define FSL_FEATURE_ENET_HAS_EXTEND_MDIO (0)
 /* @brief Has Additional 1588 Timer Channel Interrupt. */
