@@ -713,12 +713,14 @@ struct _enet_handle
     volatile enet_tx_bd_struct_t
         *txBdDirtyStatic[FSL_FEATURE_ENET_QUEUE]; /*!< The dirty transmit buffer descriptor for error static update. */
     uint64_t msTimerSecond;                       /*!< The second for Master PTP timer. */
+    enet_ptp_timer_channel_t mPtpTmrChannel; /*!< PTP 1588 timer channel. */
+    uint32_t ptpNextCounter; /*!< PTP 1588 next output compare counter value */
 #endif
     uint8_t multicastCount[64]; /*!< Multicast collisions counter */
 #if defined(FSL_FEATURE_ENET_TIMESTAMP_CAPTURE_BIT_INVALID) && FSL_FEATURE_ENET_TIMESTAMP_CAPTURE_BIT_INVALID
     uint32_t enetClock;    /*!< The clock of enet peripheral, to caculate core cycles for PTP timestamp.*/
     uint32_t tsDelayCount; /*!< The count of core cycles for PTP timestamp capture delay.*/
-#endif
+#endif                                            /* ENET_ENHANCEDBUFFERDESCRIPTOR_MODE */
 };
 
 typedef struct _enet_buffer_struct
