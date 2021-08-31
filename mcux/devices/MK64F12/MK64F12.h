@@ -9544,6 +9544,18 @@ typedef struct {
 #define ENET_TCCR_TCC(x)                         (((uint32_t)(((uint32_t)(x)) << ENET_TCCR_TCC_SHIFT)) & ENET_TCCR_TCC_MASK)
 /*! @} */
 
+#define ENET_TCSR_TPWC_MASK                      (0xF800U)
+#define ENET_TCSR_TPWC_SHIFT                     (11U)
+/*! TPWC - Timer PulseWidth Control
+ *  0b00000..Pulse width is one 1588-clock cycle.
+ *  0b00001..Pulse width is two 1588-clock cycles.
+ *  0b00010..Pulse width is three 1588-clock cycles.
+ *  0b00011..Pulse width is four 1588-clock cycles.
+ *  0b11111..Pulse width is 32 1588-clock cycles.
+ */
+#define ENET_TCSR_TPWC(x)                        (((uint32_t)(((uint32_t)(x)) << ENET_TCSR_TPWC_SHIFT)) & ENET_TCSR_TPWC_MASK)
+/*! @} */
+
 /* The count of ENET_TCCR */
 #define ENET_TCCR_COUNT                          (4U)
 

@@ -386,6 +386,8 @@
 #define FSL_FEATURE_ENET_DMA_BIG_ENDIAN_ONLY (0)
 /* @brief Has precision time protocol (IEEE 1588) support (register bit field ECR[EN1588], registers ATCR, ATVR, ATOFF, ATPER, ATCOR, ATINC, ATSTMP). */
 #define FSL_FEATURE_ENET_SUPPORT_PTP (1)
+/* @brief Has Timer Pulse Width control. */
+#define FSL_FEATURE_ENET_HAS_TIMER_PWCONTROL (1)
 /* @brief Number of associated interrupt vectors. */
 #define FSL_FEATURE_ENET_INTERRUPT_COUNT (4)
 /* @brief Has threshold for the number of frames in the receive FIFO (register bit field RSEM[STAT_SECTION_EMPTY]). */
