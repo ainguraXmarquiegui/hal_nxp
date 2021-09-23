@@ -3304,6 +3304,7 @@ void ENET_Ptp1588GetTimer(ENET_Type *base, enet_handle_t *handle, enet_ptp_time_
     if (0U != (base->EIR & (uint32_t)kENET_TsTimerInterrupt))
     {
         ptpTime->second++;
+        ENET_Ptp1588GetTimerNoIrqDisable(base, handle, ptpTime);
     }
 
     /* Enables the interrupt. */
