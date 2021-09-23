@@ -77,8 +77,6 @@ static enet_isr_t s_enetErrIsr[ARRAY_SIZE(s_enetBases)];
 static enet_isr_t s_enetTsIsr[ARRAY_SIZE(s_enetBases)];
 static enet_isr_t s_enet1588TimerIsr[ARRAY_SIZE(s_enetBases)];
 
-static void ENET_ReclaimTxDescriptor(ENET_Type *base, enet_handle_t *handle, uint8_t ringId);
-
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
