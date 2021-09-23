@@ -3258,13 +3258,15 @@ void ENET_Ptp1588GetTimerNoIrqDisable(ENET_Type *base, enet_handle_t *handle, en
     /* Get the current PTP time. */
     ptpTime->second = handle->msTimerSecond;
     /* Get the nanosecond from the master timer. */
-    base->ATCR |= ENET_ATCR_CAPTURE_MASK | ENET_ATCR_PEREN_MASK;
-    /* Add at least six clock cycle delay to get accurate time.
-       It's the requirement when the 1588 clock source is slower
-       than the register clock.
-    */
-    while ((base->ATCR & ENET_ATCR_CAPTURE_MASK) == ENET_ATCR_CAPTURE_MASK) {
-	;
+    base->ATCR |= ENET_ATCR_CAPTURE_MASK;
+
+#if defined(FSL_FEATURE_ENET_TIMESTAMP_CAPTURE_BIT_INVALID) && FSL_FEATURE_ENET_TIMESTAMP_CAPTURE_BIT_INVALID
+    /* The whole while loop includes at least three instructions(subs, nop and bne). */
+    uint32_t count = (handle->tsDelayCount + 3U - 1U) / 3U;
+
+    while (0U != (count--))
+    {
+        __NOP();
     }
 #else
     /* Wait for capture over */
