@@ -3233,7 +3233,7 @@ void ENET_Ptp1588StartTimer(ENET_Type *base, uint32_t ptpClkSrc)
     base->ATINC = ENET_ATINC_INC(ENET_NANOSECOND_ONE_SECOND / ptpClkSrc);
     base->ATPER = ENET_NANOSECOND_ONE_SECOND;
     /* Sets periodical event and the event signal output assertion and Actives PTP 1588 timer.  */
-#if 1
+#if 0
     base->ATCR = ENET_ATCR_PEREN_MASK | ENET_ATCR_PINPER_MASK | ENET_ATCR_EN_MASK;
 #else
     base->ATCR = ENET_ATCR_EN_MASK;
@@ -3303,8 +3303,8 @@ void ENET_Ptp1588GetTimer(ENET_Type *base, enet_handle_t *handle, enet_ptp_time_
     {
         if (last_sec == ptpTime->second)
         {
-            /* this read is not valid, use old data*/
-            ptpTime->nanosecond = last_nano_sec;
+            /* increase second, fixme PEREN should not enable*/
+            ptpTime->second++;
         }
     }
     last_sec = ptpTime->second;
