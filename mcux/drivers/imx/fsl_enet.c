@@ -3293,7 +3293,7 @@ void ENET_Ptp1588GetTimer(ENET_Type *base, enet_handle_t *handle, enet_ptp_time_
     uint32_t primask;
 
     /* Disables the interrupt. */
-    primask = DisableGlobalIRQ();
+    //primask = DisableGlobalIRQ();
 
     ENET_Ptp1588GetTimerNoIrqDisable(base, handle, ptpTime);
 
@@ -3302,10 +3302,12 @@ void ENET_Ptp1588GetTimer(ENET_Type *base, enet_handle_t *handle, enet_ptp_time_
     {
         ptpTime->second++;
         ENET_Ptp1588GetTimerNoIrqDisable(base, handle, ptpTime);
+        /* Clear the time stamp interrupt. */
+        base->EIR = (uint32_t)kENET_TsTimerInterrupt;
     }
 
     /* Enables the interrupt. */
-    EnableGlobalIRQ(primask);
+    //EnableGlobalIRQ(primask);
 }
 
 /*!
