@@ -3291,13 +3291,26 @@ void ENET_Ptp1588GetTimer(ENET_Type *base, enet_handle_t *handle, enet_ptp_time_
     assert(handle != NULL);
     assert(ptpTime != NULL);
     uint32_t primask;
+    static uint32_t last_nano_sec = 0;
+    static uint32_t last_sec = 0;
 
     /* Disables the interrupt. */
     //primask = DisableGlobalIRQ();
 
     ENET_Ptp1588GetTimerNoIrqDisable(base, handle, ptpTime);
-
+    /* timer wrapper happen but interrupt not served yet*/
+    if (last_nano_sec > ptpTime->nanosecond)
+    {
+        if (last_sec == ptpTime->second)
+        {
+            /* this read is not valid, use old data*/
+            ptpTime->nanosecond = last_nano_sec;
+        }
+    }
+    last_sec = ptpTime->second;
+    last_nano_sec = ptpTime->nanosecond;
     /* Get PTP timer wrap event. */
+    #if 0
     if (0U != (base->EIR & (uint32_t)kENET_TsTimerInterrupt))
     {
         ptpTime->second++;
@@ -3305,6 +3318,7 @@ void ENET_Ptp1588GetTimer(ENET_Type *base, enet_handle_t *handle, enet_ptp_time_
         /* Clear the time stamp interrupt. */
         base->EIR = (uint32_t)kENET_TsTimerInterrupt;
     }
+    #endif
 
     /* Enables the interrupt. */
     //EnableGlobalIRQ(primask);
