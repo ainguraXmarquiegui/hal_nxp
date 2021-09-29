@@ -3325,7 +3325,7 @@ void ENET_Ptp1588GetTimer(ENET_Type *base, enet_handle_t *handle, enet_ptp_time_
 {
     assert(handle != NULL);
     assert(ptpTime != NULL);
-    uint32_t primask;
+    //uint32_t primask;
     static uint32_t last_nano_sec = 0;
     static uint32_t last_sec = 0;
 

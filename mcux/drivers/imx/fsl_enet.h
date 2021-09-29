@@ -298,7 +298,6 @@ typedef enum _enet_event
     kENET_WakeUpEvent,        /*!< Wake up from sleep mode event. */
     kENET_TimeStampEvent,     /*!< Time stamp event. */
     kENET_TimeStampAvailEvent, /*!< Time stamp available event.*/
-    kENET_TimeStampCaptureEvent /*!< Time Stamp capture event. */
 } enet_event_t;
 
 #if defined(FSL_FEATURE_ENET_HAS_AVB) && FSL_FEATURE_ENET_HAS_AVB
