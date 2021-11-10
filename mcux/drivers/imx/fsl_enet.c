@@ -3209,6 +3209,8 @@ static void ENET_Ptp1588enablepps(ENET_Type *base, enet_handle_t *handle, enet_p
         tmp_val = base->CHANNEL[tmr_ch].TCSR;
     } while (tmp_val & ENET_TCSR_TMODE_MASK);
     tmp_val = (ENET_NANOSECOND_ONE_SECOND >> 1);
+    // offset PPS 37microseconds for testing only
+    tmp_val -= 37000;
     ENET_Ptp1588SetChannelCmpValue(base, tmr_ch, tmp_val);
     /* Calculate the second the compare event timestamp */
     next_counter = tmp_val;
