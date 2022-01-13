@@ -1964,6 +1964,15 @@ void ENET_Ptp1588GetTimerNoIrqDisable(ENET_Type *base, enet_handle_t *handle, en
 void ENET_Ptp1588GetTimer(ENET_Type *base, enet_handle_t *handle, enet_ptp_time_t *ptpTime);
 
 /*!
+ * brief Gets the timestamp of the last transmitted frame
+ *
+ * param base  ENET peripheral base address.
+ * param handle The ENET state pointer. This is the same state pointer used in the ENET_Init.
+ * param ptpTime The transmitted PTP time structure.
+ */
+void ENET_Ptp1588GetATSTMP(ENET_Type *base, enet_handle_t *handle, enet_ptp_time_t *ptpTime);
+
+/*!
  * @brief Sets the ENET PTP 1588 timer to the assigned time.
  *
  * @param base  ENET peripheral base address.

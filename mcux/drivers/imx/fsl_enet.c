@@ -3303,6 +3303,54 @@ void ENET_Ptp1588GetTimer(ENET_Type *base, enet_handle_t *handle, enet_ptp_time_
 }
 
 /*!
+ * brief Gets the timestamp of the last transmitted frame
+ *
+ * param base  ENET peripheral base address.
+ * param handle The ENET state pointer. This is the same state pointer used in the ENET_Init.
+ * param ptpTime The transmitted PTP time structure.
+ */
+void ENET_Ptp1588GetATSTMP(ENET_Type *base, enet_handle_t *handle, enet_ptp_time_t *ptpTime)
+{
+    assert(handle != NULL);
+    assert(ptpTime != NULL);
+    uint32_t primask;
+    enet_ptp_time_t currentPTPTime;
+
+    /* Disables the interrupt. */
+    primask = DisableGlobalIRQ();
+
+    ENET_Ptp1588GetTimerNoIrqDisable(base, handle, &currentPTPTime);
+
+    /* Get PTP timer wrap event. */
+    if (0U != (base->EIR & (uint32_t)kENET_TsTimerInterrupt))
+    {
+        currentPTPTime.second++;
+    }
+
+    // Is timestamp ready?? // XXX - TODO: It never is... why??
+    if (0U != (base->EIR & kENET_TsAvailInterrupt)) {
+
+        // Read timestamp
+        ptpTime->nanosecond = base->ATSTMP;
+
+        // If timestamp is newer than current, it must have been in the previous second
+        //if (ptpTime->nanosecond > currentPTPTime.nanosecond) {
+        //    ptpTime->second = currentPTPTime.second - 1;
+        //} else {
+            ptpTime->second = currentPTPTime.second;
+        //}
+    }
+     else {
+        // ERROR: No Timestamp available, return error value
+        ptpTime->nanosecond = UINT32_MAX;
+        ptpTime->second = UINT64_MAX;
+    }
+
+    /* Enables the interrupt. */
+    EnableGlobalIRQ(primask);
+}
+
+/*!
  * brief Sets the ENET PTP 1588 timer to the assigned time.
  *
  * param base  ENET peripheral base address.
