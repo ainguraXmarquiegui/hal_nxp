@@ -3340,10 +3340,11 @@ void ENET_Ptp1588GetATSTMP(ENET_Type *base, enet_handle_t *handle, enet_ptp_time
             ptpTime->second = currentPTPTime.second;
         //}
     }
-     else {
+    else {
         // ERROR: No Timestamp available, return error value
         ptpTime->nanosecond = UINT32_MAX;
         ptpTime->second = UINT64_MAX;
+        printf("ERROR: Unable to get last transmitted frame timestamp. Interrupt flags: 0x%04X\n", base->EIMR);
     }
 
     /* Enables the interrupt. */
@@ -3630,8 +3631,7 @@ void ENET_TimeStampIRQHandler(ENET_Type *base, enet_handle_t *handle)
 
     if (0U != ((uint32_t)kENET_TsAvailInterrupt & base->EIR))
     {
-        /* Clear the time stamp interrupt. */
-        base->EIR = (uint32_t)kENET_TsAvailInterrupt;
+//        printf("XXXbbb\n");
         /* Callback function. */
         if (NULL != handle->callback)
         {
@@ -3641,6 +3641,8 @@ void ENET_TimeStampIRQHandler(ENET_Type *base, enet_handle_t *handle)
             handle->callback(base, handle, kENET_TimeStampAvailEvent, NULL, handle->userData);
 #endif /* FSL_FEATURE_ENET_QUEUE > 1 */
         }
+        /* Clear the time stamp interrupt. */
+        base->EIR = (uint32_t)kENET_TsAvailInterrupt;
     }
 }
 #endif /* ENET_ENHANCEDBUFFERDESCRIPTOR_MODE */
